@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import user from '../../user';
 import { application } from 'express';
@@ -14,8 +13,7 @@ application.post('/login', async (req, res) => {
       }
   
       // Compare passwords
-      const passwordMatch = await bcrypt.compare(password, existingUser.password);
-      if (!passwordMatch) {
+      if (password !== existingUser.password) {
         return res.status(400).json({ message: 'Invalid email or password' });
       }
   
@@ -28,4 +26,3 @@ application.post('/login', async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     } 
   });
-  

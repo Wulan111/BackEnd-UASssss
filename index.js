@@ -1,10 +1,10 @@
-import express from "express";
-import mongoose from "mongoose";
-import cors from 'cors';
-import visitorRouter from "./src/routes/visitorRouter";
-
-import jwt from 'jsonwebtoken';
-import user from './src/user';
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require('cors');
+const visitorRouter = require("./src/routes/visitorRouter");
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const user = require('./src/user');
 
 // Membuat koneksi ke database MongoDB
 const app = express();
@@ -29,7 +29,6 @@ mongoose
   });
 
 // Define the user schema
-// Define the user schema
 const userSchema = new mongoose.Schema({
   email: String,
   password: String,
@@ -49,8 +48,12 @@ app.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    // Hash the password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
     // Create a new user
-    const newUser = new User({ email, password });
+    const newUser = new User({ email, password: hashedPassword });
     await newUser.save();
 
     res.status(201).json({ message: 'User registered successfully' });
@@ -72,7 +75,8 @@ app.post('/login', async (req, res) => {
     }
 
     // Compare passwords
-    if (password !== existingUser.password) {
+    const passwordMatch = await bcrypt.compare(password, existingUser.password);
+    if (!passwordMatch) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
@@ -84,4 +88,9 @@ app.post('/login', async (req, res) => {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
   }
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Server berjalan di http://localhost:${port}`);
 });
